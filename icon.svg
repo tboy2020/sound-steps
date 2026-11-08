@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a7bf0"/>
+      <stop offset="1" stop-color="#5a3fc0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- sound waves -->
+  <g fill="none" stroke="#ffd23f" stroke-width="20" stroke-linecap="round" opacity="0.9">
+    <path d="M330 206 q40 50 0 100"/>
+    <path d="M372 176 q74 80 0 160"/>
+  </g>
+  <!-- letter block Aa -->
+  <g font-family="'Baloo 2', Arial, sans-serif" font-weight="800" fill="#ffffff" text-anchor="middle">
+    <text x="190" y="330" font-size="240">A</text>
+  </g>
+  <circle cx="150" cy="150" r="20" fill="#ff7eb6"/>
+  <circle cx="110" cy="360" r="16" fill="#49d08b"/>
+</svg>

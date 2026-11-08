@@ -1,0 +1,14 @@
+{
+  "name": "Sound Steps",
+  "short_name": "Sound Steps",
+  "description": "Learn letter sounds, then build words from syllable blocks. Voice-first phonics for little ones.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#5a3fc0",
+  "theme_color": "#6a4bd0",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

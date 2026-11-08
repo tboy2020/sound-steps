@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#6a4bd0">
+<meta name="description" content="Sound Steps — learn letter sounds, then build words from syllable blocks. Voice-first phonics for little ones.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Sound Steps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --b1:#5a3fc0; --b2:#7b5be0; --b3:#9a7bf0;
+    --card:#ffffff; --ink:#2a1d55; --ink-soft:#6b5c9a;
+    --sun:#ffd23f; --sun-d:#e8a900;
+    --pink:#ff7eb6; --pink-d:#e0558f;
+    --green:#49d08b; --green-d:#2fa968;
+    --sky:#4ec3ff; --sky-d:#2f9fe0;
+    --orange:#ff9f45; --orange-d:#e67a26;
+    --cream:#f7f3ff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:'Fredoka',system-ui,sans-serif; color:var(--cream);
+    background:radial-gradient(130% 100% at 50% -10%, var(--b3) 0%, var(--b2) 45%, var(--b1) 100%) fixed;
+    overflow:hidden; -webkit-user-select:none; user-select:none; touch-action:manipulation;
+  }
+  .app{height:100%; max-width:620px; margin:0 auto; display:flex; flex-direction:column; padding:12px 16px 16px;}
+  .screen{flex:1; display:none; flex-direction:column; min-height:0;}
+  .screen.on{display:flex;}
+  .scrolly{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column;}
+
+  h1,h2{font-family:'Baloo 2'; font-weight:800; margin:0;}
+
+  /* top bar */
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex:0 0 auto;}
+  .homebtn,.gear{width:52px; height:52px; flex:0 0 auto; border:none; cursor:pointer; color:#fff;
+    background:rgba(255,255,255,.18); border:3px solid rgba(255,255,255,.35); border-radius:18px; font-size:24px;}
+  .homebtn:active,.gear:active{transform:translateY(2px);}
+  .starbar{margin-left:auto; display:flex; align-items:center; gap:7px; background:rgba(255,210,63,.22);
+    border:3px solid var(--sun); border-radius:999px; padding:7px 16px; font-family:'Baloo 2'; font-weight:800; font-size:19px; color:#fff;}
+
+  /* mascot */
+  .mascot{font-size:68px; line-height:1; text-align:center; animation:bob 2.4s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-8px) rotate(2deg);}}
+  .bubble{background:#fff; color:var(--ink); border-radius:22px; padding:14px 18px; font-family:'Baloo 2'; font-weight:700;
+    font-size:19px; text-align:center; box-shadow:0 8px 0 rgba(0,0,0,.12); position:relative; margin:10px auto 0; max-width:92%;}
+
+  /* welcome */
+  .welcome{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px;}
+  .welcome h1{font-size:40px; color:#fff;}
+  .bigstart{border:none; cursor:pointer; font-family:'Baloo 2'; font-weight:800; font-size:28px; color:#fff;
+    padding:22px 44px; border-radius:26px; background:var(--green); box-shadow:0 9px 0 var(--green-d); margin-top:6px;}
+  .bigstart:active{transform:translateY(7px); box-shadow:0 2px 0 var(--green-d);}
+
+  /* home cards */
+  .homewrap{margin-top:auto; margin-bottom:auto; display:flex; flex-direction:column; gap:16px;}
+  .bigcard{display:flex; align-items:center; gap:18px; width:100%; cursor:pointer; border:none; text-align:left;
+    border-radius:28px; padding:22px 22px; box-shadow:0 10px 0 rgba(0,0,0,.16); color:#fff;}
+  .bigcard:active{transform:translateY(6px); box-shadow:0 4px 0 rgba(0,0,0,.16);}
+  .bigcard .ce{font-size:52px; line-height:1; flex:0 0 auto; width:76px; height:76px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.25); border-radius:22px;}
+  .bigcard b{font-family:'Baloo 2'; font-size:28px; display:block;}
+  .bigcard span{font-size:15px; opacity:.95;}
+  .c-letters{background:linear-gradient(135deg,var(--sky),var(--sky-d));}
+  .c-build{background:linear-gradient(135deg,var(--pink),var(--pink-d));}
+  .c-stickers{background:linear-gradient(135deg,var(--orange),var(--orange-d));}
+
+  /* letters */
+  .stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;}
+  .lettercard{background:#fff; border-radius:34px; padding:18px 24px 24px; text-align:center; box-shadow:0 12px 0 rgba(0,0,0,.14); width:100%; max-width:380px;}
+  .bigletter{font-family:'Baloo 2'; font-weight:800; font-size:clamp(90px,34vw,150px); line-height:1; color:var(--b1);}
+  .bigletter small{font-size:.45em; color:var(--pink-d); vertical-align:middle;}
+  .letterpic{font-size:clamp(56px,20vw,90px); line-height:1;}
+  .letterword{font-family:'Baloo 2'; font-weight:700; font-size:22px; color:var(--ink); margin-top:2px;}
+  .hearbig{border:none; cursor:pointer; background:var(--sun); color:#5a3d0e; font-family:'Baloo 2'; font-weight:800;
+    font-size:22px; padding:14px 26px; border-radius:999px; box-shadow:0 6px 0 var(--sun-d); margin-top:12px;}
+  .hearbig:active{transform:translateY(4px); box-shadow:0 2px 0 var(--sun-d);}
+  .navrow{display:flex; gap:14px; align-items:center; justify-content:center; margin-top:14px; flex:0 0 auto;}
+  .navbtn{width:72px; height:72px; border:none; cursor:pointer; border-radius:24px; font-size:34px; color:#fff;
+    background:rgba(255,255,255,.2); border:3px solid rgba(255,255,255,.4);}
+  .navbtn:active{transform:translateY(3px);}
+  .navbtn.play{background:var(--green); border-color:var(--green-d); box-shadow:0 6px 0 var(--green-d); width:88px;}
+  .navbtn[disabled]{opacity:.35;}
+
+  /* sound game */
+  .gameq{font-family:'Baloo 2'; font-weight:800; font-size:26px; color:#fff; text-align:center;}
+  .choices3{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
+  .choicebig{width:clamp(96px,29vw,130px); height:clamp(96px,29vw,130px); border:none; cursor:pointer; border-radius:30px;
+    background:#fff; box-shadow:0 8px 0 rgba(0,0,0,.14); font-size:clamp(50px,16vw,74px); display:flex; align-items:center; justify-content:center; font-family:'Baloo 2'; font-weight:800; color:var(--b1);}
+  .choicebig:active{transform:translateY(5px); box-shadow:0 3px 0 rgba(0,0,0,.14);}
+  .choicebig.good{background:linear-gradient(180deg,#8ef0bd,var(--green)); color:#fff; animation:pop .4s;}
+  .choicebig.bad{animation:wob .4s;}
+  @keyframes pop{0%{transform:scale(.7);}60%{transform:scale(1.12);}100%{transform:scale(1);}}
+  @keyframes wob{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+  /* syllable builder */
+  .buildtop{text-align:center;}
+  .buildpic{font-size:clamp(70px,24vw,110px); line-height:1;}
+  .blocks{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0;}
+  .block{border:none; cursor:pointer; border-radius:22px; padding:18px clamp(12px,4vw,22px); min-width:64px;
+    font-family:'Baloo 2'; font-weight:800; font-size:clamp(26px,8vw,40px); color:#fff; box-shadow:0 7px 0 rgba(0,0,0,.18); position:relative;}
+  .block:active{transform:translateY(4px);}
+  .block.b0{background:var(--sky);} .block.b1{background:var(--pink);} .block.b2{background:var(--green);}
+  .block.b3{background:var(--orange);} .block.b4{background:#b07bff;}
+  .block.dim{opacity:.4;}
+  .block.next{animation:glow 1s ease-in-out infinite; outline:4px solid #fff;}
+  @keyframes glow{0%,100%{outline-color:rgba(255,255,255,.4);}50%{outline-color:rgba(255,255,255,1);}}
+  .block.done{opacity:1;}
+  .block .tick{position:absolute; top:-10px; right:-8px; font-size:22px; display:none;}
+  .block.done .tick{display:block;}
+  .wholeword{font-family:'Baloo 2'; font-weight:800; font-size:clamp(28px,9vw,44px); color:#fff; min-height:48px; text-align:center; letter-spacing:1px;}
+
+  /* stickers */
+  .stickergrid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:6px 2px;}
+  .sticker{aspect-ratio:1; border-radius:22px; background:rgba(255,255,255,.14); border:3px dashed rgba(255,255,255,.3);
+    display:flex; align-items:center; justify-content:center; font-size:36px;}
+  .sticker.got{background:#fff; border:3px solid var(--sun); box-shadow:0 5px 0 rgba(0,0,0,.12); animation:pop .4s;}
+
+  /* confetti + toast */
+  .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50;}
+  .conf{position:absolute; font-size:28px; animation:fall 1.2s ease-out forwards;}
+  @keyframes fall{0%{transform:translateY(0) scale(.6) rotate(0); opacity:1;}100%{transform:translateY(-250px) scale(1.2) rotate(230deg); opacity:0;}}
+  .cheer{position:fixed; left:50%; top:16%; transform:translateX(-50%) scale(.6); opacity:0; z-index:60;
+    font-family:'Baloo 2'; font-weight:800; font-size:40px; color:#fff; text-shadow:0 4px 12px rgba(0,0,0,.3); pointer-events:none; transition:all .35s cubic-bezier(.3,1.5,.5,1);}
+  .cheer.show{opacity:1; transform:translateX(-50%) scale(1);}
+
+  /* parent overlay */
+  .overlay{position:fixed; inset:0; background:rgba(30,16,70,.6); display:none; align-items:center; justify-content:center; padding:18px; z-index:80;}
+  .overlay.open{display:flex;}
+  .sheet{width:100%; max-width:440px; background:var(--cream); color:var(--ink); border-radius:26px; padding:22px; box-shadow:0 30px 60px rgba(0,0,0,.45);}
+  .sheet h2{font-size:23px; margin-bottom:4px;}
+  .sheet .sub{color:var(--ink-soft); margin:0 0 14px; font-size:14px; font-weight:600;}
+  .pin-dots{font-size:28px; letter-spacing:10px; min-height:34px; text-align:center; color:var(--ink); margin:6px 0 12px;}
+  .keys{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; max-width:260px; margin:0 auto;}
+  .key{border:2px solid #d9cff2; background:#fff; cursor:pointer; border-radius:14px; padding:14px 0; font-family:'Baloo 2'; font-weight:800; font-size:22px; color:var(--ink);}
+  .key:active{transform:translateY(2px);}
+  .statline{display:flex; justify-content:space-between; padding:9px 2px; border-bottom:1px solid #e7defa; font-weight:600;}
+  .statline b{font-family:'Baloo 2';}
+  .row{display:flex; gap:10px; margin-top:16px;}
+  .ghost{flex:1; border:2px solid #d9cff2; background:#fff; cursor:pointer; border-radius:14px; padding:13px; font-family:'Baloo 2'; font-weight:700; font-size:14px; color:var(--ink-soft);}
+  .solid{flex:1; border:none; background:var(--b2); color:#fff; cursor:pointer; border-radius:14px; padding:13px; font-family:'Baloo 2'; font-weight:800; font-size:15px;}
+  .toggle{display:flex; align-items:center; justify-content:space-between; padding:10px 0; font-weight:700;}
+  .sw{width:56px; height:32px; border-radius:999px; background:#d9cff2; border:none; cursor:pointer; position:relative;}
+  .sw.on{background:var(--green);}
+  .sw::after{content:""; position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#fff; transition:left .2s;}
+  .sw.on::after{left:27px;}
+  .err{color:#cc4b37; font-weight:800; min-height:18px; text-align:center;}
+  .hidden{display:none !important;}
+  .footer{text-align:center; font-size:11px; color:rgba(247,243,255,.55); padding:8px 0 2px; font-weight:600; flex:0 0 auto;}
+
+  /* --- design-review polish --- */
+  .stage{gap:clamp(10px,2.5vh,18px); padding:clamp(8px,3vh,24px) 0;}
+  .stagehead{font-family:'Baloo 2'; font-weight:800; font-size:clamp(18px,5vw,22px); color:#fff; text-align:center; opacity:.95; text-shadow:0 2px 6px rgba(0,0,0,.18);}
+  .block.dim{opacity:1; filter:saturate(.5) brightness(.78); box-shadow:0 5px 0 rgba(0,0,0,.16);}
+  .navbtn{box-shadow:0 5px 0 rgba(0,0,0,.18);}
+  .navbtn:active{transform:translateY(5px); box-shadow:0 0 0 rgba(0,0,0,.18);}
+  .blocks{flex-wrap:nowrap; gap:clamp(6px,2vw,10px);}
+  .block{min-width:0; flex:0 1 auto; padding:16px clamp(8px,3vw,20px); font-size:clamp(20px,6.5vw,40px);}
+  .choices3{flex-wrap:nowrap; gap:clamp(8px,3vw,16px);}
+  .choicebig{width:clamp(82px,26vw,130px); height:clamp(82px,26vw,130px); font-size:clamp(44px,15vw,74px);}
+  .bigletter{font-size:clamp(84px,min(30vw,30vh),140px);}
+  .bigletter small{font-size:.34em; vertical-align:baseline; margin-left:.14em; background:#ffe3ef; border-radius:999px; padding:.05em .4em;}
+  .bigletter .low{font-size:.66em; color:var(--b2); margin-left:.1em; vertical-align:baseline;}
+  .buildpic{font-size:clamp(66px,min(22vw,16vh),108px);}
+  .wholeword{min-height:clamp(32px,6vw,48px);}
+  .bigcard b{text-shadow:0 2px 4px rgba(0,0,0,.22);}
+  .bigcard span{opacity:1; color:rgba(255,255,255,.94); text-shadow:0 1px 3px rgba(0,0,0,.28);}
+  .welcome{overflow-y:auto;}
+  .homebtn{width:60px; height:60px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .mascot,.conf,.choicebig.good,.choicebig.bad,.sticker.got,.block.next{animation:none;}
+    *:active{transform:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar hidden" id="topbar">
+    <button class="homebtn" id="homeBtn" aria-label="Home">🏠</button>
+    <div class="starbar"><span>⭐</span><span id="starNum">0</span></div>
+    <button class="gear" id="gearBtn" aria-label="Grown-ups">⚙️</button>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="screen on" id="scr-welcome">
+    <div class="welcome">
+      <div class="mascot" id="wMascot">🦉</div>
+      <h1>Sound Steps</h1>
+      <div class="bubble" id="wBubble">Hi! I'm Hoot. Let's learn our sounds!</div>
+      <button class="bigstart" id="startBtn">▶ Start</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen" id="scr-home">
+    <div class="scrolly">
+      <div class="mascot" style="font-size:52px; margin-top:4px;">🦉</div>
+      <div class="bubble" id="homeBubble">What shall we do?</div>
+      <div class="homewrap">
+        <button class="bigcard c-letters" data-go="letters">
+          <span class="ce">🔤</span><span><b>Letter Sounds</b><span>Hear what each letter says</span></span>
+        </button>
+        <button class="bigcard c-build" data-go="build">
+          <span class="ce">🧩</span><span><b>Build a Word</b><span>Put the sound blocks together</span></span>
+        </button>
+        <button class="bigcard c-stickers" data-go="stickers">
+          <span class="ce">⭐</span><span><b>My Stickers</b><span>See what you've won</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LETTERS -->
+  <div class="screen" id="scr-letters">
+    <div class="scrolly">
+      <div class="stage">
+        <div class="stagehead">Listen to the letter 👂</div>
+        <div class="lettercard">
+          <div class="bigletter" id="bigLetter">A<small id="letterSound">aa</small></div>
+          <div class="letterpic" id="letterPic">🍎</div>
+          <div class="letterword" id="letterWord">A is for apple</div>
+          <button class="hearbig" id="letterHear">👂 Hear it</button>
+        </div>
+        <div class="navrow">
+          <button class="navbtn" id="letterPrev" aria-label="Back">◀</button>
+          <button class="navbtn play" id="letterGame" aria-label="Play a game">🎮</button>
+          <button class="navbtn" id="letterNext" aria-label="Next">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOUND GAME -->
+  <div class="screen" id="scr-game">
+    <div class="scrolly">
+      <div class="stage">
+        <div class="gameq" id="gameQ">Which one says…?</div>
+        <button class="hearbig" id="gameHear">👂 Hear the sound</button>
+        <div class="choices3" id="gameChoices"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUILD -->
+  <div class="screen" id="scr-build">
+    <div class="scrolly">
+      <div class="stage">
+        <div class="stagehead">Tap each block to hear it 🧩</div>
+        <div class="buildtop">
+          <div class="buildpic" id="buildPic">🍎</div>
+        </div>
+        <div class="blocks" id="buildBlocks"></div>
+        <div class="wholeword" id="wholeWord"></div>
+        <div class="navrow">
+          <button class="hearbig" id="buildSay">👂 Say it</button>
+          <button class="navbtn play" id="buildNext" aria-label="Next word">▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STICKERS -->
+  <div class="screen" id="scr-stickers">
+    <div class="scrolly">
+      <h2 style="color:#fff; text-align:center; margin:6px 0 12px;">⭐ My Stickers</h2>
+      <div class="stickergrid" id="stickerGrid"></div>
+    </div>
+  </div>
+
+  <div class="footer">Sound Steps · Glory to God alone · AMHG</div>
+</div>
+
+<div class="confetti" id="confetti"></div>
+<div class="cheer" id="cheer"></div>
+
+<!-- parent -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div id="pinView">
+      <h2>Grown-ups only</h2>
+      <p class="sub">Enter the code.</p>
+      <div class="pin-dots" id="pinDots"></div>
+      <div class="keys" id="keys"></div>
+      <div class="err" id="pinErr"></div>
+      <div class="row"><button class="ghost" id="pinCancel">Close</button></div>
+    </div>
+    <div id="dashView" class="hidden">
+      <h2>Sound Steps</h2>
+      <p class="sub">A gentle place to start reading.</p>
+      <div id="dashStats"></div>
+      <div class="toggle"><span>🔊 Voice on</span><button class="sw on" id="voiceSw" aria-label="Toggle voice"></button></div>
+      <div class="row">
+        <button class="ghost" id="resetBtn">Reset stickers</button>
+        <button class="solid" id="dashDone">Done</button>
+      </div>
+      <p class="sub" style="margin-top:12px; font-size:12px;">Tip: short bursts work best — a few minutes of sounds, then play. First master the letter sounds, then build words from the blocks.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(id){ return document.getElementById(id); };
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* storage */
+  function loadJSON(k,d){ try{ var v=localStorage.getItem(k); return v===null?d:JSON.parse(v); }catch(e){ return d; } }
+  function saveJSON(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  var KEY="soundsteps_v1";
+  var P=loadJSON(KEY, { stars:0, stickers:{}, letter:0, voice:true, started:false });
+  function persist(){ saveJSON(KEY,P); }
+
+  /* speech (hardened + watchdog) */
+  var voice=null, pref=null;
+  function pickVoice(){ try{ var vs=speechSynthesis.getVoices(); if(!vs||!vs.length) return; var i,p=null;
+    for(i=0;i<vs.length;i++){ if(/en[-_]US/i.test(vs[i].lang)&&/female|samantha|karen|victoria|zira|jenny|aria|google us/i.test(vs[i].name)){p=vs[i];break;} }
+    if(!p) for(i=0;i<vs.length;i++){ if(/^en/i.test(vs[i].lang)){p=vs[i];break;} }
+    voice=p||vs[0]; }catch(e){} }
+  if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+  function say(text, rate, cb){
+    var done=false; function fire(){ if(done) return; done=true; if(cb) cb(); }
+    if(!P.voice || !("speechSynthesis" in window) || !text){ fire(); return; }
+    try{ var s=speechSynthesis; if(s.speaking||s.pending) s.cancel();
+      var str=String(text); var u=new SpeechSynthesisUtterance(str); u.rate=rate||0.9; u.pitch=1.15; u.lang="en-US";
+      if(voice) u.voice=voice; u.onend=fire; u.onerror=fire; s.speak(u); if(s.paused) s.resume();
+      setTimeout(fire, Math.max(1300, Math.round(str.length*65/(rate||0.9))+1100));
+    }catch(e){ fire(); }
+  }
+  function stopSpeak(){ try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){} }
+
+  function R(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function shuffle(a){ a=a.slice(); var i,j,t; for(i=a.length-1;i>0;i--){ j=Math.floor(Math.random()*(i+1)); t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+  /* data — letters: sound (phonetic for TTS) + example + emoji */
+  /* teaching order (synthetic phonics): s a t i p n first, continuous sounds before stops */
+  var LETTERS=[
+    {L:"S",s:"sss",w:"sun",e:"☀️"},{L:"A",s:"aaa",w:"apple",e:"🍎"},{L:"T",s:"tuh",w:"tree",e:"🌳"},
+    {L:"I",s:"ih",w:"igloo",e:"🧊"},{L:"P",s:"puh",w:"pig",e:"🐷"},{L:"N",s:"nnn",w:"nest",e:"🪺"},
+    {L:"M",s:"mmm",w:"moon",e:"🌙"},{L:"D",s:"duh",w:"dog",e:"🐶"},{L:"G",s:"guh",w:"goat",e:"🐐"},
+    {L:"O",s:"ah",w:"octopus",e:"🐙"},{L:"C",s:"kuh",w:"cat",e:"🐱"},{L:"K",s:"kuh",w:"kite",e:"🪁"},
+    {L:"E",s:"eh",w:"egg",e:"🥚"},{L:"U",s:"uh",w:"umbrella",e:"☂️"},{L:"R",s:"rrr",w:"rain",e:"🌧️"},
+    {L:"H",s:"huh",w:"hat",e:"🎩"},{L:"B",s:"buh",w:"ball",e:"⚽"},{L:"F",s:"fff",w:"fish",e:"🐟"},
+    {L:"L",s:"lll",w:"lion",e:"🦁"},{L:"J",s:"juh",w:"juice",e:"🧃"},{L:"V",s:"vvv",w:"violin",e:"🎻"},
+    {L:"W",s:"wuh",w:"water",e:"💧"},{L:"X",s:"ks",w:"box",e:"📦"},{L:"Y",s:"yuh",w:"yoyo",e:"🪀"},
+    {L:"Z",s:"zzz",w:"zebra",e:"🦓"},{L:"Q",s:"kwuh",w:"queen",e:"👑"}
+  ];
+
+  /* syllable words — parts said one at a time, then blended */
+  /* easy -> hard. CVC first (single sounds; "say" = the sound, not the letter name) */
+  var WORDS=[
+    {w:"cat",e:"🐱",p:["c","a","t"],say:["kuh","aaa","tuh"]},
+    {w:"sun",e:"☀️",p:["s","u","n"],say:["sss","uh","nnn"]},
+    {w:"pig",e:"🐷",p:["p","i","g"],say:["puh","ih","guh"]},
+    {w:"dog",e:"🐶",p:["d","o","g"],say:["duh","ah","guh"]},
+    {w:"hat",e:"🎩",p:["h","a","t"],say:["huh","aaa","tuh"]},
+    {w:"map",e:"🗺️",p:["m","a","p"],say:["mmm","aaa","puh"]},
+    {w:"net",e:"🥅",p:["n","e","t"],say:["nnn","eh","tuh"]},
+    {w:"bug",e:"🐛",p:["b","u","g"],say:["buh","uh","guh"]},
+    {w:"rabbit",e:"🐰",p:["rab","bit"]},{w:"muffin",e:"🧁",p:["muf","fin"]},{w:"sunset",e:"🌅",p:["sun","set"]},
+    {w:"robot",e:"🤖",p:["ro","bot"]},{w:"pencil",e:"✏️",p:["pen","cil"]},{w:"zebra",e:"🦓",p:["ze","bra"]},
+    {w:"tiger",e:"🐯",p:["ti","ger"]},{w:"lemon",e:"🍋",p:["lem","on"]},
+    {w:"banana",e:"🍌",p:["ba","na","na"]},{w:"umbrella",e:"☂️",p:["um","brel","la"]},
+    {w:"butterfly",e:"🦋",p:["but","ter","fly"]},{w:"dinosaur",e:"🦕",p:["di","no","saur"]},
+    {w:"kangaroo",e:"🦘",p:["kan","ga","roo"]},
+    {w:"elephant",e:"🐘",p:["el","e","phant"],say:["el","uh","funt"]},
+    {w:"educator",e:"🧑‍🏫",p:["edu","ca","tor"],say:["ed-yoo","kay","tor"]}
+  ];
+
+  /* rewards */
+  var STICKERS=["🌟","🏆","🎈","🌈","🦄","🚀","🍭","🎉","🐥","🌻","🦋","🐳","🍩","🎸","🧸","👑"];
+  function confetti(){ if(reduced) return; var box=$("confetti"); var e=["⭐","🌟","✨","🎉","💜","🌈","🎈"];
+    for(var i=0;i<18;i++){ var c=document.createElement("span"); c.className="conf"; c.textContent=pick(e);
+      c.style.left=(6+Math.random()*88)+"%"; c.style.bottom=(14+Math.random()*34)+"%"; c.style.animationDelay=(Math.random()*.2)+"s"; c.style.fontSize=(20+Math.random()*20)+"px";
+      box.appendChild(c); (function(n){ setTimeout(function(){ if(n.parentNode) n.parentNode.removeChild(n); },1400); })(c); }
+  }
+  var cheerT=null;
+  function cheer(text){ var c=$("cheer"); c.textContent=text; c.classList.add("show"); if(cheerT) clearTimeout(cheerT);
+    cheerT=setTimeout(function(){ c.classList.remove("show"); }, 1200); }
+  var PRAISE=["Yay!","Woohoo!","You did it!","Super!","Great!","Hooray!","Wow!","Amazing!"];
+  function winBit(stickerFromWord){
+    P.stars++; $("starNum").textContent=P.stars;
+    // award a sticker every few stars
+    if(P.stars % 3 === 0){ var idx=Object.keys(P.stickers).length % STICKERS.length; P.stickers[idx]=1; }
+    persist(); confetti(); cheer(pick(PRAISE));
+  }
+
+  /* router */
+  var SCREENS=["welcome","home","letters","game","build","stickers"];
+  var current="welcome";
+  function show(name){
+    stopSpeak(); current=name;
+    for(var i=0;i<SCREENS.length;i++){ var el=$("scr-"+SCREENS[i]); if(el) el.classList.toggle("on", SCREENS[i]===name); }
+    $("topbar").classList.toggle("hidden", name==="welcome");
+    $("homeBtn").classList.toggle("hidden", name==="home" || name==="welcome");
+    $("starNum").textContent=P.stars;
+    if(name==="home") onHome();
+    else if(name==="letters") showLetter();
+    else if(name==="game") newGame();
+    else if(name==="build") newWord();
+    else if(name==="stickers") showStickers();
+  }
+  function onHome(){ say("What shall we do? Tap letter sounds, or build a word.", 0.95); }
+
+  /* welcome */
+  $("startBtn").addEventListener("click", function(){ P.started=true; persist(); show("home");
+    say("Let's learn our sounds!", 0.95); });
+  $("wMascot").addEventListener("click", function(){ say("Hi! I'm Hoot the owl. Let's learn to read!", 0.95); });
+  $("homeBtn").addEventListener("click", function(){ show("home"); });
+
+  var cards=document.querySelectorAll("[data-go]");
+  for(var ci=0;ci<cards.length;ci++){ (function(el){ el.addEventListener("click", function(){ show(el.getAttribute("data-go")); }); })(cards[ci]); }
+
+  /* ---- letters ---- */
+  var li=0;
+  function showLetter(){ li = P.letter||0; if(li<0) li=0; if(li>=LETTERS.length) li=0; paintLetter(); setTimeout(hearLetter, 250); }
+  function paintLetter(){
+    var d=LETTERS[li];
+    $("bigLetter").innerHTML=d.L+'<span class="low">'+d.L.toLowerCase()+'</span><small>'+d.s+'</small>';
+    $("letterPic").textContent=d.e;
+    $("letterWord").textContent=d.L+" is for "+d.w;
+  }
+  function hearLetter(){ var d=LETTERS[li]; say(d.L+" says "+d.s+"... "+d.s+". "+d.L+" is for "+d.w+".", 0.9); }
+  $("letterHear").addEventListener("click", hearLetter);
+  $("bigLetter").addEventListener("click", hearLetter);
+  $("letterPic").addEventListener("click", hearLetter);
+  $("letterNext").addEventListener("click", function(){ li=(li+1)%LETTERS.length; P.letter=li; persist(); paintLetter(); hearLetter(); });
+  $("letterPrev").addEventListener("click", function(){ li=(li-1+LETTERS.length)%LETTERS.length; P.letter=li; persist(); paintLetter(); hearLetter(); });
+  $("letterGame").addEventListener("click", function(){ show("game"); });
+
+  /* ---- sound game: "which one says X?" ---- */
+  var gTarget=null;
+  function newGame(){
+    var pool=shuffle(LETTERS), picks=[], seen={}, n;
+    for(n=0;n<pool.length && picks.length<3;n++){ if(!seen[pool[n].s]){ seen[pool[n].s]=1; picks.push(pool[n]); } }
+    gTarget=pick(picks);
+    $("gameQ").textContent="Tap the one that says…";
+    var grid=$("gameChoices"); grid.innerHTML="";
+    for(var i=0;i<picks.length;i++){ (function(d){
+      var b=document.createElement("button"); b.className="choicebig"; b.textContent=d.L;
+      b.addEventListener("click", function(){
+        if(b.dataset.lock) return;
+        if(d.L===gTarget.L){ b.dataset.lock=1; b.classList.add("good"); winBit(); say("Yes! "+d.L+" says "+d.s+"!",0.95); setTimeout(newGame, 1500); }
+        else { b.classList.add("bad"); say("That one says "+d.s+". Try the "+gTarget.s+" sound.",0.95); setTimeout(function(){ b.classList.remove("bad"); }, 500); }
+      });
+      grid.appendChild(b);
+    })(picks[i]); }
+    setTimeout(function(){ say("Which one says... "+gTarget.s+"?", 0.9); }, 300);
+  }
+  $("gameHear").addEventListener("click", function(){ if(gTarget) say("Which one says... "+gTarget.s+"?", 0.9); });
+
+  /* ---- syllable builder ---- */
+  var curWord=null, tapped=[], order=0;
+  function newWord(){
+    var idx=(typeof P.word==="number")?(P.word%WORDS.length):0;
+    curWord=WORDS[idx]; P.word=(idx+1)%WORDS.length; persist();
+    tapped=[]; order=0;
+    $("buildPic").textContent=curWord.e;
+    $("wholeWord").textContent="";
+    var box=$("buildBlocks"); box.innerHTML="";
+    for(var i=0;i<curWord.p.length;i++){ tapped.push(false); (function(idx){
+      var b=document.createElement("button"); b.className="block b"+(idx%5)+(idx===0?" next":" dim");
+      b.innerHTML=curWord.p[idx]+'<span class="tick">✅</span>';
+      b.addEventListener("click", function(){ tapBlock(idx, b); });
+      box.appendChild(b);
+    })(i); }
+    setTimeout(function(){ say("Let's build this word. Tap each block!", 0.95); }, 300);
+  }
+  function tapBlock(idx, b){
+    // gentle left-to-right: if they tap ahead, just replay the one they're up to
+    var firstU=-1,j; for(j=0;j<tapped.length;j++){ if(!tapped[j]){ firstU=j; break; } }
+    if(!tapped[idx] && idx!==firstU){ say((curWord.say&&curWord.say[firstU])||curWord.p[firstU], 0.75); return; }
+    say((curWord.say&&curWord.say[idx])||curWord.p[idx], 0.75);
+    if(!tapped[idx]){ tapped[idx]=true; b.classList.add("done"); b.classList.remove("dim"); }
+    // advance the glowing "next" hint to the first untapped block
+    var blocks=$("buildBlocks").getElementsByClassName("block");
+    var allDone=true, nextIdx=-1;
+    for(var i=0;i<tapped.length;i++){ if(!tapped[i]){ allDone=false; if(nextIdx<0) nextIdx=i; } }
+    for(var k=0;k<blocks.length;k++){ blocks[k].classList.remove("next"); if(!tapped[k]) blocks[k].classList.add("dim"); }
+    if(nextIdx>=0){ blocks[nextIdx].classList.remove("dim"); blocks[nextIdx].classList.add("next"); }
+    if(allDone){ setTimeout(blendWord, 650); }
+  }
+  function blendWord(){
+    $("wholeWord").textContent=curWord.w;
+    var parts=(curWord.say||curWord.p).join("... ");
+    // blend slow, then snap the whole word faster
+    say(parts, 0.7, function(){ say(curWord.w+"!", 1.05); });
+    winBit(true);
+  }
+  $("buildSay").addEventListener("click", function(){ if(curWord){ if($("wholeWord").textContent){ say(curWord.w, 0.9); } else { say((curWord.say||curWord.p).join("... "), 0.75); } } });
+  $("buildNext").addEventListener("click", function(){ newWord(); });
+
+  /* ---- stickers ---- */
+  function showStickers(){
+    var grid=$("stickerGrid"); grid.innerHTML="";
+    for(var i=0;i<STICKERS.length;i++){ var got=P.stickers[i];
+      var d=document.createElement("div"); d.className="sticker"+(got?" got":""); d.textContent=got?STICKERS[i]:"";
+      grid.appendChild(d);
+    }
+    say("Here are your stickers! You have "+Object.keys(P.stickers).length+".", 0.95);
+  }
+
+  /* ---- parent ---- */
+  var PIN="2020", pinEntry="";
+  function renderPinDots(){ var d=""; for(var i=0;i<pinEntry.length;i++) d+="●"; $("pinDots").textContent=d; }
+  function buildKeys(){ var keys=$("keys"); keys.innerHTML=""; var labels=["1","2","3","4","5","6","7","8","9","⌫","0","OK"];
+    for(var i=0;i<labels.length;i++){ (function(lbl){ var k=document.createElement("button"); k.className="key"; k.textContent=lbl;
+      k.addEventListener("click", function(){ $("pinErr").textContent="";
+        if(lbl==="⌫"){ pinEntry=pinEntry.slice(0,-1); } else if(lbl==="OK"){ checkPin(); return; } else if(pinEntry.length<4){ pinEntry+=lbl; }
+        renderPinDots(); if(pinEntry.length===4) checkPin(); });
+      keys.appendChild(k); })(labels[i]); } }
+  function checkPin(){ if(pinEntry===PIN){ pinEntry=""; renderPinDots(); $("pinView").classList.add("hidden"); $("dashView").classList.remove("hidden"); renderDash(); } else { $("pinErr").textContent="Try again"; pinEntry=""; renderPinDots(); } }
+  function renderDash(){
+    var h="";
+    h+='<div class="statline"><b>⭐ Stars</b><span>'+P.stars+'</span></div>';
+    h+='<div class="statline"><b>🎟️ Stickers</b><span>'+Object.keys(P.stickers).length+' / '+STICKERS.length+'</span></div>';
+    h+='<div class="statline"><b>🔤 Letter</b><span>'+LETTERS[P.letter||0].L+'</span></div>';
+    $("dashStats").innerHTML=h;
+    $("voiceSw").classList.toggle("on", !!P.voice);
+  }
+  $("gearBtn").addEventListener("click", function(){ pinEntry=""; renderPinDots(); $("pinErr").textContent=""; $("pinView").classList.remove("hidden"); $("dashView").classList.add("hidden"); $("overlay").classList.add("open"); });
+  $("pinCancel").addEventListener("click", function(){ $("overlay").classList.remove("open"); });
+  $("dashDone").addEventListener("click", function(){ $("overlay").classList.remove("open"); });
+  $("overlay").addEventListener("click", function(e){ if(e.target===$("overlay")) $("overlay").classList.remove("open"); });
+  $("voiceSw").addEventListener("click", function(){ P.voice=!P.voice; persist(); $("voiceSw").classList.toggle("on", P.voice); if(P.voice) say("Voice is on!",1); });
+  $("resetBtn").addEventListener("click", function(){ if(window.confirm("Reset stars and stickers?")){ P.stars=0; P.stickers={}; persist(); $("starNum").textContent="0"; renderDash(); } });
+
+  buildKeys();
+  show("welcome");
+
+  if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
+  document.addEventListener("touchstart", function once(){ try{ if("speechSynthesis" in window){ speechSynthesis.speak(new SpeechSynthesisUtterance("")); } }catch(e){} document.removeEventListener("touchstart", once); }, {passive:true});
+})();
+</script>
+</body>
+</html>
