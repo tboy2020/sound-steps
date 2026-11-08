@@ -316,7 +316,12 @@
   function loadJSON(k,d){ try{ var v=localStorage.getItem(k); return v===null?d:JSON.parse(v); }catch(e){ return d; } }
   function saveJSON(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
   var KEY="soundsteps_v1";
-  var P=loadJSON(KEY, { stars:0, stickers:{}, letter:0, voice:true, started:false });
+  var P=loadJSON(KEY, null);
+  if(!P || typeof P!=="object"){ P={}; }
+  if(typeof P.stars!=="number") P.stars=0;
+  if(!P.stickers || typeof P.stickers!=="object") P.stickers={};
+  if(typeof P.letter!=="number") P.letter=0;
+  if(typeof P.voice!=="boolean") P.voice=true;
   function persist(){ saveJSON(KEY,P); }
 
   /* speech (hardened + watchdog) */
@@ -438,18 +443,18 @@
   $("letterGame").addEventListener("click", function(){ show("game"); });
 
   /* ---- sound game: "which one says X?" ---- */
-  var gTarget=null;
+  var gTarget=null, gameLock=false;
   function newGame(){
     var pool=shuffle(LETTERS), picks=[], seen={}, n;
     for(n=0;n<pool.length && picks.length<3;n++){ if(!seen[pool[n].s]){ seen[pool[n].s]=1; picks.push(pool[n]); } }
-    gTarget=pick(picks);
+    gTarget=pick(picks); gameLock=false;
     $("gameQ").textContent="Tap the one that says…";
     var grid=$("gameChoices"); grid.innerHTML="";
     for(var i=0;i<picks.length;i++){ (function(d){
       var b=document.createElement("button"); b.className="choicebig"; b.textContent=d.L;
       b.addEventListener("click", function(){
-        if(b.dataset.lock) return;
-        if(d.L===gTarget.L){ b.dataset.lock=1; b.classList.add("good"); winBit(); say("Yes! "+d.L+" says "+d.s+"!",0.95); setTimeout(newGame, 1500); }
+        if(gameLock) return;
+        if(d.L===gTarget.L){ gameLock=true; b.classList.add("good"); winBit(); say("Yes! "+d.L+" says "+d.s+"!",0.95); setTimeout(newGame, 1500); }
         else { b.classList.add("bad"); say("That one says "+d.s+". Try the "+gTarget.s+" sound.",0.95); setTimeout(function(){ b.classList.remove("bad"); }, 500); }
       });
       grid.appendChild(b);
@@ -459,11 +464,11 @@
   $("gameHear").addEventListener("click", function(){ if(gTarget) say("Which one says... "+gTarget.s+"?", 0.9); });
 
   /* ---- syllable builder ---- */
-  var curWord=null, tapped=[], order=0;
+  var curWord=null, tapped=[], order=0, wordBuilt=false;
   function newWord(){
     var idx=(typeof P.word==="number")?(P.word%WORDS.length):0;
     curWord=WORDS[idx]; P.word=(idx+1)%WORDS.length; persist();
-    tapped=[]; order=0;
+    tapped=[]; order=0; wordBuilt=false;
     $("buildPic").textContent=curWord.e;
     $("wholeWord").textContent="";
     var box=$("buildBlocks"); box.innerHTML="";
@@ -487,7 +492,7 @@
     for(var i=0;i<tapped.length;i++){ if(!tapped[i]){ allDone=false; if(nextIdx<0) nextIdx=i; } }
     for(var k=0;k<blocks.length;k++){ blocks[k].classList.remove("next"); if(!tapped[k]) blocks[k].classList.add("dim"); }
     if(nextIdx>=0){ blocks[nextIdx].classList.remove("dim"); blocks[nextIdx].classList.add("next"); }
-    if(allDone){ setTimeout(blendWord, 650); }
+    if(allDone && !wordBuilt){ wordBuilt=true; setTimeout(blendWord, 650); }
   }
   function blendWord(){
     $("wholeWord").textContent=curWord.w;
@@ -523,7 +528,7 @@
     var h="";
     h+='<div class="statline"><b>⭐ Stars</b><span>'+P.stars+'</span></div>';
     h+='<div class="statline"><b>🎟️ Stickers</b><span>'+Object.keys(P.stickers).length+' / '+STICKERS.length+'</span></div>';
-    h+='<div class="statline"><b>🔤 Letter</b><span>'+LETTERS[P.letter||0].L+'</span></div>';
+    h+='<div class="statline"><b>🔤 Letter</b><span>'+LETTERS[(P.letter||0)%LETTERS.length].L+'</span></div>';
     $("dashStats").innerHTML=h;
     $("voiceSw").classList.toggle("on", !!P.voice);
   }
