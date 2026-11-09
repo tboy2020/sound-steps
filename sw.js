@@ -1,6 +1,6 @@
 /* Sound Steps — service worker (offline-first) */
-var CACHE = "sound-steps-v2";
-var CORE = ["./", "./index.html", "./manifest.json", "./icon.svg"];
+var CACHE = "sound-steps-v4";
+var CORE = ["./", "./index.html", "./manifest.json", "./icon.svg", "./install-button.js"];
 
 self.addEventListener("install", function(e){
   self.skipWaiting();

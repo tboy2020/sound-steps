@@ -371,12 +371,12 @@
     {w:"map",e:"🗺️",p:["m","a","p"],say:["mmm","aaa","puh"]},
     {w:"net",e:"🥅",p:["n","e","t"],say:["nnn","eh","tuh"]},
     {w:"bug",e:"🐛",p:["b","u","g"],say:["buh","uh","guh"]},
-    {w:"rabbit",e:"🐰",p:["rab","bit"]},{w:"muffin",e:"🧁",p:["muf","fin"]},{w:"sunset",e:"🌅",p:["sun","set"]},
-    {w:"robot",e:"🤖",p:["ro","bot"]},{w:"pencil",e:"✏️",p:["pen","cil"]},{w:"zebra",e:"🦓",p:["ze","bra"]},
-    {w:"tiger",e:"🐯",p:["ti","ger"]},{w:"lemon",e:"🍋",p:["lem","on"]},
-    {w:"banana",e:"🍌",p:["ba","na","na"]},{w:"umbrella",e:"☂️",p:["um","brel","la"]},
-    {w:"butterfly",e:"🦋",p:["but","ter","fly"]},{w:"dinosaur",e:"🦕",p:["di","no","saur"]},
-    {w:"kangaroo",e:"🦘",p:["kan","ga","roo"]},
+    {w:"rabbit",e:"🐰",p:["rab","bit"],say:["rab","bit"]},{w:"muffin",e:"🧁",p:["muf","fin"],say:["muff","in"]},{w:"sunset",e:"🌅",p:["sun","set"],say:["sun","set"]},
+    {w:"robot",e:"🤖",p:["ro","bot"],say:["roh","bot"]},{w:"pencil",e:"✏️",p:["pen","cil"],say:["pen","sill"]},{w:"zebra",e:"🦓",p:["ze","bra"],say:["zee","bruh"]},
+    {w:"tiger",e:"🐯",p:["ti","ger"],say:["tie","gur"]},{w:"lemon",e:"🍋",p:["lem","on"],say:["lem","un"]},
+    {w:"banana",e:"🍌",p:["ba","na","na"],say:["buh","nah","nuh"]},{w:"umbrella",e:"☂️",p:["um","brel","la"],say:["um","brell","uh"]},
+    {w:"butterfly",e:"🦋",p:["but","ter","fly"],say:["but","tur","fly"]},{w:"dinosaur",e:"🦕",p:["di","no","saur"],say:["die","nuh","sore"]},
+    {w:"kangaroo",e:"🦘",p:["kan","ga","roo"],say:["kang","guh","roo"]},
     {w:"elephant",e:"🐘",p:["el","e","phant"],say:["el","uh","funt"]},
     {w:"educator",e:"🧑‍🏫",p:["edu","ca","tor"],say:["ed-yoo","kay","tor"]}
   ];
@@ -546,5 +546,6 @@
   document.addEventListener("touchstart", function once(){ try{ if("speechSynthesis" in window){ speechSynthesis.speak(new SpeechSynthesisUtterance("")); } }catch(e){} document.removeEventListener("touchstart", once); }, {passive:true});
 })();
 </script>
+<script src="install-button.js" defer></script>
 </body>
 </html>
