@@ -331,16 +331,52 @@
     if(!p) for(i=0;i<vs.length;i++){ if(/^en/i.test(vs[i].lang)){p=vs[i];break;} }
     voice=p||vs[0]; }catch(e){} }
   if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+  /* baked-in audio: hand-tuned clips so every device hears the same clean sound.
+     keyed by the exact text say() receives; falls back to the live voice if no clip. */
+  var CLIPS={"kuh":"audio/kuh.wav","aaa":"audio/aaa.wav","tuh":"audio/tuh.wav","sss":"audio/sss.wav","uh":"audio/uh.wav","nnn":"audio/nnn.wav","puh":"audio/puh.wav","ih":"audio/ih.wav","guh":"audio/guh.wav","duh":"audio/duh.wav","ah":"audio/ah.wav","huh":"audio/huh.wav","mmm":"audio/mmm.wav","eh":"audio/eh.wav","buh":"audio/buh.wav","rab":"audio/rab.wav","bit":"audio/bit.wav","muff":"audio/muff.wav","in":"audio/in.wav","sun":"audio/sun.wav","set":"audio/set.wav","roh":"audio/roh.wav","bot":"audio/bot.wav","pen":"audio/pen.wav","sill":"audio/sill.wav","zee":"audio/zee.wav","bruh":"audio/bruh.wav","tie":"audio/tie.wav","gur":"audio/gur.wav","lem":"audio/lem.wav","un":"audio/un.wav","nah":"audio/nah.wav","nuh":"audio/nuh.wav","um":"audio/um.wav","brell":"audio/brell.wav","but":"audio/but.wav","tur":"audio/tur.wav","fly":"audio/fly.wav","die":"audio/die.wav","sore":"audio/sore.wav","kang":"audio/kang.wav","roo":"audio/roo.wav","el":"audio/el.wav","funt":"audio/funt.wav","ed-yoo":"audio/ed_yoo.wav","kay":"audio/kay.wav","tor":"audio/tor.wav","cat":"audio/cat.wav","pig":"audio/pig.wav","dog":"audio/dog.wav","hat":"audio/hat.wav","map":"audio/map.wav","net":"audio/net.wav","bug":"audio/bug.wav","rabbit":"audio/rabbit.wav","muffin":"audio/muffin.wav","sunset":"audio/sunset.wav","robot":"audio/robot.wav","pencil":"audio/pencil.wav","zebra":"audio/zebra.wav","tiger":"audio/tiger.wav","lemon":"audio/lemon.wav","banana":"audio/banana.wav","umbrella":"audio/umbrella.wav","butterfly":"audio/butterfly.wav","dinosaur":"audio/dinosaur.wav","kangaroo":"audio/kangaroo.wav","elephant":"audio/elephant.wav","educator":"audio/educator.wav"};
+  var CLIP_GAP=360;            // ms pause between syllables in a blend (a tidy, consistent split — not dead air)
+  var curAudio=null;
+  function stopAudio(){ try{ if(curAudio){ curAudio.onended=null; curAudio.onerror=null; curAudio.pause(); curAudio=null; } }catch(e){} }
+  function clipKey(t){ return String(t).replace(/[.!?,]+$/,"").trim(); }
+  function playClip(src, cb){
+    var done=false; function fire(){ if(done) return; done=true; if(cb) cb(); }
+    try{
+      stopAudio(); try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){}
+      var a=new Audio(src); curAudio=a;
+      a.onended=function(){ if(curAudio===a) curAudio=null; fire(); };
+      a.onerror=function(){ if(curAudio===a) curAudio=null; fire(); };
+      var pr=a.play(); if(pr&&pr["catch"]) pr["catch"](function(){ fire(); });
+      setTimeout(fire, 6000);   // safety: clips are short
+    }catch(e){ fire(); }
+  }
+  function playSeq(srcs, cb){
+    var i=0, done=false; function fin(){ if(done) return; done=true; if(cb) cb(); }
+    function next(){ if(i>=srcs.length){ fin(); return; } var src=srcs[i++]; playClip(src, function(){ setTimeout(next, CLIP_GAP); }); }
+    next();
+  }
   function say(text, rate, cb){
     var done=false; function fire(){ if(done) return; done=true; if(cb) cb(); }
-    if(!P.voice || !("speechSynthesis" in window) || !text){ fire(); return; }
+    if(!P.voice || !text){ fire(); return; }
+    var str=String(text).trim();
+    // 1) blended syllables "a... b... c" -> play each clip with a controlled pause
+    if(str.indexOf("...")>=0){
+      var segs=str.split(/\.\.\.+/), srcs=[], ok=true, i, seg;
+      for(i=0;i<segs.length;i++){ seg=clipKey(segs[i]); if(seg===""){ continue; } if(CLIPS[seg]){ srcs.push(CLIPS[seg]); } else { ok=false; break; } }
+      if(ok && srcs.length){ playSeq(srcs, cb); return; }
+    }
+    // 2) single word/sound with a baked clip
+    var k=clipKey(str);
+    if(CLIPS[k]){ playClip(CLIPS[k], cb); return; }
+    if(CLIPS[k.toLowerCase()]){ playClip(CLIPS[k.toLowerCase()], cb); return; }
+    // 3) fall back to the live device voice (unchanged)
+    if(!("speechSynthesis" in window)){ fire(); return; }
     try{ var s=speechSynthesis; if(s.speaking||s.pending) s.cancel();
-      var str=String(text); var u=new SpeechSynthesisUtterance(str); u.rate=rate||0.9; u.pitch=1.15; u.lang="en-US";
+      var u=new SpeechSynthesisUtterance(str); u.rate=rate||0.9; u.pitch=1.15; u.lang="en-US";
       if(voice) u.voice=voice; u.onend=fire; u.onerror=fire; s.speak(u); if(s.paused) s.resume();
       setTimeout(fire, Math.max(1300, Math.round(str.length*65/(rate||0.9))+1100));
     }catch(e){ fire(); }
   }
-  function stopSpeak(){ try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){} }
+  function stopSpeak(){ stopAudio(); try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){} }
 
   function R(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
