@@ -1,0 +1,331 @@
+<!doctype html>
+<!--
+  sound steps
+  © 2026 Taiwo Adegoke. All rights reserved.
+  This source code, design, and content are the property of Taiwo Adegoke.
+  Unauthorized copying, reuse, modification, or redistribution is prohibited.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sound Steps — Pronunciation Test Lab</title>
+<meta name="author" content="Taiwo Adegoke">
+<meta name="copyright" content="© 2026 Taiwo Adegoke. All rights reserved.">
+
+<style>
+  :root{
+    --bg:#f3f7ff; --card:#ffffff; --ink:#172033; --soft:#5b6b86;
+    --line:#dfe7f5; --good:#1aa565; --bad:#e2574c; --accent:#5b7cfa;
+    --accent2:#13b981; --chip:#eef3ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1526; --card:#141d31; --ink:#eaf0fb; --soft:#9fb0cc;
+      --line:#223050; --chip:#1b2740;
+    }
+  }
+  :root[data-theme="dark"]{ --bg:#0e1526; --card:#141d31; --ink:#eaf0fb; --soft:#9fb0cc; --line:#223050; --chip:#1b2740; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,Segoe UI,Roboto,system-ui,sans-serif;padding:0 16px 48px;}
+  header{position:sticky;top:0;background:linear-gradient(var(--bg),var(--bg) 70%,transparent);padding:18px 0 10px;z-index:5}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--soft);font-size:13px;margin:0 0 12px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 14px;}
+  button:active{transform:translateY(1px)}
+  .primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .go{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:600}
+  select{font:inherit;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);max-width:62vw}
+  .sect{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--soft);margin:22px 4px 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 12px;margin:10px 0;display:flex;align-items:center;gap:12px}
+  .card.tuned{border-color:#c7d2fe}
+  .emoji{font-size:30px;width:40px;text-align:center;flex:none}
+  .mid{flex:1;min-width:0}
+  .word{font-size:18px;font-weight:700}
+  .blocks{display:inline-flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+  .blk{background:var(--chip);border-radius:7px;padding:1px 7px;font-size:12px;color:var(--soft)}
+  .hear{color:var(--soft);font-size:12.5px;margin-top:3px}
+  .hear b{color:var(--ink)}
+  .acts{display:flex;gap:6px;flex:none}
+  .ic{width:44px;height:44px;padding:0;font-size:18px;display:grid;place-items:center;border-radius:12px}
+  .tag{font-size:12px;border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+  .tag.t{background:#eef2ff;color:#4f46e5}
+  .mark{font-weight:700}
+  .mark.good{color:var(--good)} .mark.bad{color:var(--bad)}
+  .report{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:18px}
+  textarea{width:100%;min-height:130px;margin-top:8px;border:1px solid var(--line);border-radius:12px;padding:10px;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--ink);resize:vertical}
+  .count{font-weight:700}
+  .hint{font-size:12.5px;color:var(--soft);margin:4px 2px 0}
+  .foot{text-align:center;color:var(--soft);font-size:12px;margin-top:26px}
+  .playing{outline:3px solid var(--accent);outline-offset:1px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔤 Sound Steps — Pronunciation Test Lab</h1>
+  <p class="sub">Tap ▶ on a word, listen, then tap 👍 or 👎. One device — no second phone needed.</p>
+  <div class="bar">
+    <button class="go" id="playAll">▶ Play all (tuned words)</button>
+    <button id="stopAll">⏹ Stop</button>
+    <select id="voicePick" title="Voice"></select>
+  </div>
+  <div class="bar">
+    <label class="hint"><input type="checkbox" id="autoMic"> 🎤 Auto-listen &amp; grade (Chrome + microphone)</label>
+    <span class="hint" id="micState"></span>
+  </div>
+</header>
+
+<div class="sect">⭐ The 13 tuned words (the ones to check)</div>
+<div id="tuned"></div>
+
+<div class="sect">🔧 Compare &amp; pick — the tricky middles</div>
+<p class="hint" style="margin:0 0 6px 2px">Tap A / B / C to hear each option (middle syllable differs). Tell me which letter sounds best and I'll bake it into the app.</p>
+<div id="fixit"></div>
+
+<div class="sect">Short words (already clean)</div>
+<div id="cvc"></div>
+
+<div class="report">
+  <div><span class="count" id="score">No results yet.</span></div>
+  <div class="hint">When you've marked a few, tap Copy and paste it back into the chat — I'll fix any 👎.</div>
+  <textarea id="reportBox" readonly placeholder="Your results will appear here…"></textarea>
+  <div class="bar" style="margin-top:8px">
+    <button class="primary" id="copyBtn">📋 Copy report</button>
+    <button id="clearBtn">Clear</button>
+  </div>
+</div>
+
+<p class="foot">Sound Steps · test tool · Glory to God alone · AMHG</p>
+
+<script>
+(function(){
+  "use strict";
+  var WORDS=[
+    {w:"rabbit",e:"🐰",p:["rab","bit"],say:["rab","bit"],tuned:true},
+    {w:"muffin",e:"🧁",p:["muf","fin"],say:["muff","in"],tuned:true},
+    {w:"sunset",e:"🌅",p:["sun","set"],say:["sun","set"],tuned:true},
+    {w:"robot",e:"🤖",p:["ro","bot"],say:["roh","bot"],tuned:true},
+    {w:"pencil",e:"✏️",p:["pen","cil"],say:["pen","sill"],tuned:true},
+    {w:"zebra",e:"🦓",p:["ze","bra"],say:["zee","bruh"],tuned:true},
+    {w:"tiger",e:"🐯",p:["ti","ger"],say:["tie","gur"],tuned:true},
+    {w:"lemon",e:"🍋",p:["lem","on"],say:["lem","un"],tuned:true},
+    {w:"banana",e:"🍌",p:["ba","na","na"],say:["buh","nah","nuh"],tuned:true},
+    {w:"umbrella",e:"☂️",p:["um","brel","la"],say:["um","brell","uh"],tuned:true},
+    {w:"butterfly",e:"🦋",p:["but","ter","fly"],say:["but","tur","fly"],tuned:true},
+    {w:"dinosaur",e:"🦕",p:["di","no","saur"],say:["die","nuh","sore"],tuned:true},
+    {w:"kangaroo",e:"🦘",p:["kan","ga","roo"],say:["kang","guh","roo"],tuned:true},
+    {w:"cat",e:"🐱",p:["c","a","t"],say:["kuh","aaa","tuh"]},
+    {w:"sun",e:"☀️",p:["s","u","n"],say:["sss","uh","nnn"]},
+    {w:"pig",e:"🐷",p:["p","i","g"],say:["puh","ih","guh"]},
+    {w:"dog",e:"🐶",p:["d","o","g"],say:["duh","ah","guh"]},
+    {w:"hat",e:"🎩",p:["h","a","t"],say:["huh","aaa","tuh"]},
+    {w:"map",e:"🗺️",p:["m","a","p"],say:["mmm","aaa","puh"]},
+    {w:"net",e:"🥅",p:["n","e","t"],say:["nnn","eh","tuh"]},
+    {w:"bug",e:"🐛",p:["b","u","g"],say:["buh","uh","guh"]},
+    {w:"elephant",e:"🐘",p:["el","e","phant"],say:["el","uh","funt"]},
+    {w:"educator",e:"🧑‍🏫",p:["edu","ca","tor"],say:["ed-yoo","kay","tor"]}
+  ];
+
+  var results={};           // word -> {verdict, heard}
+  var voices=[], curVoice=null, stop=false;
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+  function $(id){return document.getElementById(id);}
+
+  /* ---------- voices ---------- */
+  function loadVoices(){
+    voices=(window.speechSynthesis&&speechSynthesis.getVoices())||[];
+    var en=voices.filter(function(v){return /^en/i.test(v.lang);});
+    var list=en.length?en:voices;
+    var sel=$("voicePick"); sel.innerHTML="";
+    list.forEach(function(v){ var o=document.createElement("option"); o.value=v.name; o.textContent=v.name.replace(/\s*\(.*\)$/,"")+" · "+v.lang; sel.appendChild(o); });
+    if(list.length){ curVoice=list[0]; sel.value=curVoice.name; }
+    sel.onchange=function(){ curVoice=voices.filter(function(v){return v.name===sel.value;})[0]||null; };
+  }
+  if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+
+  /* ---------- speech (one uninterrupted queue) ---------- */
+  var heartbeat=null;
+  function stopHeartbeat(){ if(heartbeat){ clearInterval(heartbeat); heartbeat=null; } }
+  function keepAlive(){   // Chrome pauses long/idle synthesis; nudge it to stay on
+    stopHeartbeat();
+    heartbeat=setInterval(function(){
+      try{ if(window.speechSynthesis && speechSynthesis.speaking){ speechSynthesis.resume(); } else { stopHeartbeat(); } }catch(e){ stopHeartbeat(); }
+    }, 4000);
+  }
+  function estMs(text, rate){
+    var pauses=(text.match(/\.\.\./g)||[]).length;
+    return Math.max(800, text.length*(175/(rate||0.9))) + pauses*650 + 900;
+  }
+  // items: [{text, rate}] — queued back-to-back; we cancel only ONCE at the start of a new play
+  function speakSeq(items, cb){
+    if(!window.speechSynthesis){ if(cb)cb(); return; }
+    try{ speechSynthesis.cancel(); }catch(e){}
+    var done=false, total=0;
+    function finish(){ if(done)return; done=true; stopHeartbeat(); if(cb)cb(); }
+    keepAlive();
+    items.forEach(function(it, k){
+      var u=new SpeechSynthesisUtterance(it.text);
+      u.rate=it.rate||0.9; u.pitch=1.05; if(curVoice) u.voice=curVoice;
+      if(k===items.length-1){ u.onend=finish; u.onerror=finish; }   // cb only after the LAST piece
+      total+=estMs(it.text, it.rate);
+      try{ speechSynthesis.speak(u); }catch(e){}
+    });
+    setTimeout(finish, total+1800);   // safety net only — generous, so it never cuts real speech
+  }
+  function speak(text, rate, cb){ speakSeq([{text:text, rate:rate}], cb); }
+  function hearItem(wd, cb){
+    var parts=(wd.say||wd.p);
+    speakSeq([{text:parts.join("... "), rate:0.72}, {text:wd.w, rate:1.0}], cb);
+  }
+
+  /* ---------- auto-listen (optional) ---------- */
+  function norm(s){ return (s||"").toLowerCase().replace(/[^a-z]/g,""); }
+  function autoGrade(wd, cb){
+    if(!SR){ cb(null); return; }
+    var rec=new SR(); rec.lang="en-US"; rec.interimResults=true; rec.maxAlternatives=4;
+    var heard=null, started=false, done=false;
+    rec.onresult=function(e){ try{ for(var i=e.resultIndex;i<e.results.length;i++){ heard=e.results[i][0].transcript; } }catch(x){} };
+    rec.onerror=function(){};
+    rec.onstart=function(){ started=true; setTimeout(function(){ speak(wd.w, 0.9); }, 200); };  // speak only AFTER mic is live
+    rec.onend=function(){ if(done)return; done=true; cb(heard); };
+    try{ rec.start(); }catch(e){ cb(null); return; }
+    setTimeout(function(){ if(!started){ speak(wd.w, 0.9); } }, 550);   // fallback if onstart is late
+    setTimeout(function(){ try{ rec.stop(); }catch(e){} }, 3900);       // wider listening window
+  }
+
+  /* ---------- report ---------- */
+  function setMark(wd, verdict, heard){
+    results[wd.w]={verdict:verdict, heard:heard||""};
+    var m=$("m-"+wd.w);
+    if(m){ m.className="mark "+(verdict==="good"?"good":verdict==="off"?"bad":""); m.textContent = verdict==="good"?"👍":verdict==="off"?"👎":verdict==="miss"?"🎤?":""; }
+    renderReport();
+  }
+  function renderReport(){
+    var keys=Object.keys(results); var good=0,off=0,lines=[];
+    WORDS.forEach(function(wd){
+      var r=results[wd.w]; if(!r) return;
+      if(r.verdict==="good") good++; else if(r.verdict==="off") off++;
+      var seen=(wd.say||wd.p).join("·");
+      var mk=(r.verdict==="good")?"✓":(r.verdict==="off")?"✗":"🎤?";
+      var line=mk+" "+wd.w+"  ["+seen+"]";
+      if(r.heard) line+="  → heard: \""+r.heard+"\"";
+      else if(r.verdict==="miss") line+="  → mic caught nothing (check by ear with ▶)";
+      lines.push(line);
+    });
+    $("score").textContent = keys.length? ("👍 "+good+"   👎 "+off+"   ("+keys.length+"/"+WORDS.length+" checked)") : "No results yet.";
+    $("reportBox").value = lines.length? ("Sound Steps pronunciation check\nVoice: "+(curVoice?curVoice.name:"(device default)")+"\n\n"+lines.join("\n")+"\n\n"+(off?("FIX THESE 👎: "+WORDS.filter(function(w){return results[w.w]&&results[w.w].verdict==='off';}).map(function(w){return w.w;}).join(", ")):"All good 🙌")) : "";
+  }
+
+  /* ---------- render cards ---------- */
+  function card(wd){
+    var c=document.createElement("div"); c.className="card"+(wd.tuned?" tuned":""); c.id="c-"+wd.w;
+    var blocks=wd.p.map(function(b){return '<span class="blk">'+b+'</span>';}).join("");
+    var hears=(wd.say||wd.p).join(" · ");
+    c.innerHTML=
+      '<div class="emoji">'+wd.e+'</div>'+
+      '<div class="mid">'+
+        '<div class="word">'+wd.w+(wd.tuned?' <span class="tag t">tuned</span>':'')+' <span class="mark" id="m-'+wd.w+'"></span></div>'+
+        '<div class="blocks">sees: '+blocks+'</div>'+
+        '<div class="hear">hears: <b>'+hears+'</b></div>'+
+      '</div>'+
+      '<div class="acts">'+
+        '<button class="ic" title="Hear it" data-hear="'+wd.w+'">▶</button>'+
+        '<button class="ic" title="Sounds right" data-good="'+wd.w+'">👍</button>'+
+        '<button class="ic" title="Sounds off" data-off="'+wd.w+'">👎</button>'+
+      '</div>';
+    return c;
+  }
+  function byWord(w){ for(var i=0;i<WORDS.length;i++){ if(WORDS[i].w===w) return WORDS[i]; } return null; }
+
+  var tunedBox=$("tuned"), cvcBox=$("cvc");
+  WORDS.forEach(function(wd){ (wd.tuned?tunedBox:cvcBox).appendChild(card(wd)); });
+
+  /* ---------- compare & pick (tricky middles) ---------- */
+  var CANDIDATES={
+    butterfly:[["but","ter","fly"],["but","tuh","fly"],["buh","ter","fly"]],
+    kangaroo:[["kang","guh","roo"],["kang","gah","roo"],["kan","ga","roo"]]
+  };
+  function playCand(word, i){
+    var c=CANDIDATES[word][i]; if(!c) return;
+    speakSeq([{text:c.join("... "), rate:0.72}, {text:word, rate:1.0}], null);
+  }
+  (function renderFixit(){
+    var box=$("fixit"); if(!box) return;
+    Object.keys(CANDIDATES).forEach(function(word){
+      var wd=byWord(word);
+      var btns=CANDIDATES[word].map(function(cand,i){
+        var L=String.fromCharCode(65+i);
+        return '<button class="ic" data-cand="'+word+'|'+i+'" title="'+cand.join("·")+'">'+L+' ▶</button>';
+      }).join("");
+      var opts=CANDIDATES[word].map(function(cand,i){ return String.fromCharCode(65+i)+': <b>'+cand.join("·")+'</b>'; }).join("&nbsp; · &nbsp;");
+      var c=document.createElement("div"); c.className="card tuned";
+      c.innerHTML='<div class="emoji">'+(wd?wd.e:"🔧")+'</div>'+
+        '<div class="mid"><div class="word">'+word+'</div><div class="hear">'+opts+'</div></div>'+
+        '<div class="acts">'+btns+'</div>';
+      box.appendChild(c);
+    });
+  })();
+
+  document.body.addEventListener("click", function(ev){
+    var t=ev.target.closest("button"); if(!t) return;
+    var w;
+    if((w=t.getAttribute("data-hear"))){ var wd=byWord(w); highlight(wd); hearItem(wd); }
+    else if((w=t.getAttribute("data-good"))){ setMark(byWord(w),"good"); }
+    else if((w=t.getAttribute("data-off"))){ setMark(byWord(w),"off"); }
+    else if((w=t.getAttribute("data-cand"))){ var pr=w.split("|"); playCand(pr[0], parseInt(pr[1],10)); }
+  });
+
+  function highlight(wd){
+    var el=$("c-"+wd.w); if(!el) return;
+    var cur=document.querySelector(".playing"); if(cur) cur.classList.remove("playing");
+    el.classList.add("playing"); el.scrollIntoView({block:"center",behavior:"smooth"});
+  }
+
+  /* ---------- play-all ---------- */
+  function run(list, i){
+    if(stop||i>=list.length){ $("playAll").textContent="▶ Play all (tuned words)"; return; }
+    var wd=list[i]; highlight(wd);
+    var useMic=$("autoMic").checked && SR;
+    function next(){ setTimeout(function(){ run(list,i+1); }, useMic?250:900); }
+    if(useMic){
+      autoGrade(wd, function(heard){
+        var ok = heard && (norm(heard).indexOf(norm(wd.w))>=0 || norm(wd.w).indexOf(norm(heard))>=0);
+        setMark(wd, heard?(ok?"good":"off"):"miss", heard);
+        // also play the blend for the human ear right after grading
+        hearItem(wd, next);
+      });
+    } else {
+      hearItem(wd, next);
+    }
+  }
+  $("playAll").onclick=function(){
+    stop=false; $("playAll").textContent="▶ Playing…";
+    if($("autoMic").checked && SR){ $("micState").textContent="listening…"; }
+    run(WORDS.filter(function(w){return w.tuned;}), 0);
+  };
+  $("stopAll").onclick=function(){ stop=true; try{speechSynthesis.cancel();}catch(e){} $("playAll").textContent="▶ Play all (tuned words)"; };
+
+  /* ---------- mic availability ---------- */
+  $("autoMic").addEventListener("change", function(){
+    if(this.checked && !SR){ $("micState").textContent="⚠ This browser has no speech recognition — use Chrome, or just use 👍/👎."; this.checked=false; }
+    else if(this.checked){ $("micState").textContent="will listen during Play all"; }
+    else { $("micState").textContent=""; }
+  });
+  if(!SR){ $("micState").textContent="(auto-listen needs Chrome; 👍/👎 works everywhere)"; }
+
+  /* ---------- copy / clear ---------- */
+  $("copyBtn").onclick=function(){
+    var box=$("reportBox"); if(!box.value){ return; }
+    box.removeAttribute("readonly"); box.select();
+    var ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+    if(navigator.clipboard){ navigator.clipboard.writeText(box.value).catch(function(){}); }
+    box.setAttribute("readonly","readonly");
+    $("copyBtn").textContent= "✓ Copied"; setTimeout(function(){ $("copyBtn").textContent="📋 Copy report"; },1400);
+  };
+  $("clearBtn").onclick=function(){ results={}; document.querySelectorAll(".mark").forEach(function(m){m.className="mark";m.textContent="";}); renderReport(); };
+})();
+</script>
+</body>
+</html>
